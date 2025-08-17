@@ -1,0 +1,53 @@
+[
+  {
+    "id": 1,
+    "productId": "hoodie",
+    "name": "Signature Hoodie",
+    "description": "Crafted for comfort and bold style, our hoodie is your go-to for streetwear swagger. Made with premium cotton blend, it features a relaxed fit, bold logo print, and durable stitching.",
+    "price": 59.99,
+    "sale": 20,
+    "category": "Hoodies",
+    "image1": "/products/front.jpg",
+    "image2": "/products/back.jpg",
+    "href": "/shop/hoodie",
+    "sizes": ["S", "M", "L", "XL"],
+    "colors": ["Black", "White", "Gray"],
+    "material": "80% Cotton, 20% Polyester",
+    "fit": "Relaxed",
+    "careInstructions": "Machine wash cold, tumble dry low, do not iron print."
+  },
+  {
+    "id": 2,
+    "productId": "hoodie",
+    "name": "Signature Hoodie",
+    "description": "Crafted for comfort and bold style, our hoodie is your go-to for streetwear swagger. Made with premium cotton blend, it features a relaxed fit, bold logo print, and durable stitching.",
+    "price": 59.99,
+    "sale": 20,
+    "category": "Hoodies",
+    "image1": "/products/front.jpg",
+    "image2": "/products/back.jpg",
+    "href": "/shop/hoodie",
+    "sizes": ["S", "M", "L", "XL"],
+    "colors": ["Black", "White", "Gray"],
+    "material": "80% Cotton, 20% Polyester",
+    "fit": "Relaxed",
+    "careInstructions": "Machine wash cold, tumble dry low, do not iron print."
+  },
+  {
+    "id": 3,
+    "productId": "hoodie",
+    "name": "Signature Hoodie",
+    "description": "Crafted for comfort and bold style, our hoodie is your go-to for streetwear swagger. Made with premium cotton blend, it features a relaxed fit, bold logo print, and durable stitching.",
+    "price": 59.99,
+    "sale": 20,
+    "category": "Hoodies",
+    "image1": "/products/front.jpg",
+    "image2": "/products/back.jpg",
+    "href": "/shop/hoodie",
+    "sizes": ["S", "M", "L", "XL"],
+    "colors": ["Black", "White", "Gray"],
+    "material": "80% Cotton, 20% Polyester",
+    "fit": "Relaxed",
+    "careInstructions": "Machine wash cold, tumble dry low, do not iron print."
+  }
+]
