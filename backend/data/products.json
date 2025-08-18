@@ -8,7 +8,7 @@
     "sale": false,
     "category": "Tees",
     "image1": "/products/front.jpg",
-    "image2": "/.jpg",
+    "image2": "/products/back.jpg",
     "href": "/shop/tee",
     "material": "100% Cotton",
     "fit": "Regular",

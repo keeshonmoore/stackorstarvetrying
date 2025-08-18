@@ -4,8 +4,11 @@ import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
+import { loadStripe } from '@stripe/stripe-js'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
+
+const stripePromise = loadStripe('pk_test_51RxH8zRxeAcSqD7NTCjPo77m02HgyDYNzH6LW4Tjtq6rhzSYMm2zmk7Bm8kHpwEED9Z4jOUkq9ZK50P4FMGzVTsJ00yTlA3etp')
 
 export default function ProductDetails() {
   const { productId } = useParams()
@@ -14,6 +17,8 @@ export default function ProductDetails() {
   const [quantity, setQuantity] = useState(1)
   const [selectedSize, setSelectedSize] = useState('')
   const [selectedColor, setSelectedColor] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     fetch('/data/products.json')
@@ -23,8 +28,10 @@ export default function ProductDetails() {
         const foundProduct = data.find((p) => p.productId === productId)
         setProduct(foundProduct || null)
         if (foundProduct) {
-          setSelectedSize(foundProduct.sizes[0] || '')
-          setSelectedColor(foundProduct.colors[0] || '')
+          const availableSizes = [...new Set(foundProduct.variants.map((v) => v.size))]
+          const availableColors = [...new Set(foundProduct.variants.filter((v) => v.size === availableSizes[0]).map((v) => v.color))]
+          setSelectedSize(availableSizes[0] || '')
+          setSelectedColor(availableColors[0] || '')
         }
       })
       .catch((error) => console.error('Error fetching products:', error))
@@ -33,6 +40,65 @@ export default function ProductDetails() {
   const handleQuantityChange = (value) => {
     const newQuantity = Math.max(1, Math.min(10, Number(value)))
     setQuantity(newQuantity)
+    validateStock(newQuantity, selectedSize, selectedColor)
+  }
+
+  const handleSizeChange = (size) => {
+    setSelectedSize(size)
+    const availableColors = [...new Set(product.variants.filter((v) => v.size === size).map((v) => v.color))]
+    setSelectedColor(availableColors[0] || '')
+    validateStock(quantity, size, availableColors[0] || '')
+  }
+
+  const handleColorChange = (color) => {
+    setSelectedColor(color)
+    validateStock(quantity, selectedSize, color)
+  }
+
+  const validateStock = (qty, size, color) => {
+    if (!product) return
+    const variant = product.variants.find((v) => v.size === size && v.color === color)
+    if (variant && qty > variant.stock) {
+      setError(`Only ${variant.stock} available for ${size} ${color}`)
+    } else {
+      setError('')
+    }
+  }
+
+  const handleCheckout = async () => {
+    setIsLoading(true)
+    setError('')
+    try {
+      const variant = product.variants.find((v) => v.size === selectedSize && v.color === selectedColor)
+      if (!variant || quantity > variant.stock) {
+        setError(`Only ${variant.stock} available for ${selectedSize} ${selectedColor}`)
+        setIsLoading(false)
+        return
+      }
+
+      const stripe = await stripePromise
+      const response = await fetch('http://localhost:4242/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ priceId: variant.priceId, quantity }),
+      })
+      const { clientSecret, sessionId } = await response.json()
+
+      if (!clientSecret) {
+        throw new Error('Failed to get client secret')
+      }
+
+      const result = await stripe.redirectToCheckout({ sessionId })
+      if (result.error) {
+        console.error('Checkout error:', result.error.message)
+        setError(result.error.message)
+      }
+    } catch (error) {
+      console.error('Error initiating checkout:', error)
+      setError('Failed to initiate checkout. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   if (!product) {
@@ -50,6 +116,8 @@ export default function ProductDetails() {
   }
 
   const originalPrice = product.sale ? (product.price / (1 - product.sale / 100)).toFixed(2) : null
+  const availableSizes = [...new Set(product.variants.map((v) => v.size))]
+  const availableColors = [...new Set(product.variants.filter((v) => v.size === selectedSize).map((v) => v.color))]
 
   return (
     <div className="min-h-screen bg-background font-custom">
@@ -94,12 +162,12 @@ export default function ProductDetails() {
                 </div>
                 <div className="mb-4">
                   <h3 className="text-lg text-foreground font-semibold">Size</h3>
-                  <Select value={selectedSize} onValueChange={setSelectedSize}>
+                  <Select value={selectedSize} onValueChange={handleSizeChange}>
                     <SelectTrigger className="rounded-xl border-secondary bg-background text-foreground shadow-apple italic mt-2">
                       <SelectValue placeholder="Select size" />
                     </SelectTrigger>
                     <SelectContent className="bg-background text-foreground rounded-xl border-secondary">
-                      {product.sizes.map((size) => (
+                      {availableSizes.map((size) => (
                         <SelectItem key={size} value={size}>
                           {size}
                         </SelectItem>
@@ -109,12 +177,12 @@ export default function ProductDetails() {
                 </div>
                 <div className="mb-4">
                   <h3 className="text-lg text-foreground font-semibold">Color</h3>
-                  <Select value={selectedColor} onValueChange={setSelectedColor}>
+                  <Select value={selectedColor} onValueChange={handleColorChange}>
                     <SelectTrigger className="rounded-xl border-secondary bg-background text-foreground shadow-apple italic mt-2">
                       <SelectValue placeholder="Select color" />
                     </SelectTrigger>
                     <SelectContent className="bg-background text-foreground rounded-xl border-secondary">
-                      {product.colors.map((color) => (
+                      {availableColors.map((color) => (
                         <SelectItem key={color} value={color}>
                           {color}
                         </SelectItem>
@@ -152,10 +220,16 @@ export default function ProductDetails() {
                     </Button>
                   </div>
                 </div>
+                {error && (
+                  <p className="text-destructive text-sm mb-4 italic">{error}</p>
+                )}
                 <Button
                   className="rounded-xl bg-accent text-accent-foreground hover:bg-accent/80 shadow-apple transition-all duration-200"
+                  onClick={handleCheckout}
+                  disabled={isLoading || !!error}
+                  aria-label="Proceed to checkout"
                 >
-                  Buy Now
+                  {isLoading ? 'Processing...' : 'Checkout'}
                 </Button>
               </div>
             </div>
@@ -188,7 +262,7 @@ export default function ProductDetails() {
                   {product.careInstructions}
                 </TabsContent>
                 <TabsContent value="sizing" className="mt-4 text-muted-foreground italic">
-                  Available in {product.sizes.join(', ')}. {product.fit} fit. Refer to our sizing chart for detailed measurements.
+                  Available in {product.variants.map((v) => v.size).join(', ')}. {product.fit} fit. Refer to our sizing chart for detailed measurements.
                 </TabsContent>
               </Tabs>
             </div>

@@ -1,0 +1,6 @@
+Gmail - 
+    email: stackorstarvetrying@gmail.com
+    password: Tune123Alpha!
+
+Stripe - 
+    

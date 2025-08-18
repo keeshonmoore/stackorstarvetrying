@@ -2,6 +2,7 @@ import Header from '../components/Header'
 import Hero from '../components/Hero'
 import Products from '../components/Products'
 import ProductShowcase from '../components/ProductShowcase'
+import FeaturedCollections from '../components/FeaturedCollections'
 import CTASection from '../components/CTASection'
 import Footer from '../components/Footer'
 
@@ -10,6 +11,7 @@ function Home() {
     <>
       <Header />
       <Hero />
+      <FeaturedCollections />
       <Products />
       <ProductShowcase />
       <CTASection
